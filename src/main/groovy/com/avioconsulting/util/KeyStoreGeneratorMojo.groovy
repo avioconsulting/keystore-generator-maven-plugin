@@ -1,5 +1,6 @@
 package com.avioconsulting.util
 
+import org.apache.commons.configuration.PropertiesConfiguration
 import org.apache.maven.plugin.AbstractMojo
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugin.MojoFailureException
@@ -35,16 +36,13 @@ class KeyStoreGeneratorMojo extends AbstractMojo {
             keystoreParentDir.mkdirs()
         }
         generateKeystore(destinationKeyStorePath, randomPassword)
-        def props = new Properties()
         def propsParentDir = keystorePasswordPropertiesFilePath.parentFile
         if (!propsParentDir.exists()) {
             propsParentDir.mkdirs()
         }
-        if (keystorePasswordPropertiesFilePath.exists()) {
-            props.load(keystorePasswordPropertiesFilePath.newInputStream())
-        }
-        props[keystorePasswordPropertyName] = randomPassword
-        props.store(keystorePasswordPropertiesFilePath.newOutputStream(), '')
+        def props = new PropertiesConfiguration(keystorePasswordPropertiesFilePath)
+        props.setProperty(keystorePasswordPropertyName, randomPassword)
+        props.save(keystorePasswordPropertiesFilePath.newWriter())
     }
 
     private static File join(File parent, String... parts) {

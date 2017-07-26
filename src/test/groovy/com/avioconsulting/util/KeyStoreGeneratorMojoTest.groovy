@@ -88,6 +88,7 @@ class KeyStoreGeneratorMojoTest {
         def existingProps = new Properties()
         existingProps['otherSetting'] = '123'
         existingProps.store(propsPath.newOutputStream(), '')
+        propsPath.text = '# existing comments\n' + propsPath.text
 
         // act
         mojo.execute()
@@ -107,6 +108,8 @@ class KeyStoreGeneratorMojoTest {
                    is(not(containsString('Keystore was tampered with, or password was incorrect')))
         assertThat text,
                    is(containsString('Your keystore contains 1 entry'))
+        assertThat propsPath.text,
+                   is(containsString('# existing comments'))
     }
 
     @Test
