@@ -30,8 +30,16 @@ class KeyStoreGeneratorMojo extends AbstractMojo {
     void execute() throws MojoExecutionException, MojoFailureException {
         def random = new SecureRandom()
         def randomPassword = new BigInteger(130, random).toString(32)
+        def keystoreParentDir = destinationKeyStorePath.parentFile
+        if (!keystoreParentDir.exists()) {
+            keystoreParentDir.mkdirs()
+        }
         generateKeystore(destinationKeyStorePath, randomPassword)
         def props = new Properties()
+        def propsParentDir = keystorePasswordPropertiesFilePath.parentFile
+        if (!propsParentDir.exists()) {
+            propsParentDir.mkdirs()
+        }
         if (keystorePasswordPropertiesFilePath.exists()) {
             props.load(keystorePasswordPropertiesFilePath.newInputStream())
         }
