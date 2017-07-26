@@ -80,12 +80,36 @@ class KeyStoreGeneratorMojoTest {
     }
 
     @Test
-    void propertyAlreadyThere() {
+    void alreadyThere_overwrite() {
         // arrange
+        def mojo = new KeyStoreGeneratorMojo()
+        def keystorePath = new File(this.tmpDir, 'keystore.jks')
+        mojo.destinationKeyStorePath = keystorePath
+        def propsPath = new File(this.tmpDir, 'stuff.properties')
+        mojo.keystorePasswordPropertiesFilePath = propsPath
+        mojo.keystorePasswordPropertyName = 'listener.keystore.password'
+        def existingProps = new Properties()
+        existingProps['listener.keystore.password'] = 'foobar'
+        existingProps.store(propsPath.newOutputStream(), '')
+        keystorePath.text = 'existing'
 
         // act
+        mojo.execute()
 
         // assert
-        fail 'write this'
+        assert propsPath.exists()
+        def props = new Properties()
+        props.load(propsPath.newInputStream())
+        assertThat props['listener.keystore.password'],
+                   is(notNullValue())
+        def password = props['listener.keystore.password']
+        assertThat password,
+                   is(not(equalTo('foobar')))
+        assert keystorePath.exists()
+        def text = "keytool -list -keystore ${keystorePath.absolutePath} -storepass ${password}".execute().text
+        assertThat text,
+                   is(not(containsString('Keystore was tampered with, or password was incorrect')))
+        assertThat text,
+                   is(containsString('Your keystore contains 1 entry'))
     }
 }
