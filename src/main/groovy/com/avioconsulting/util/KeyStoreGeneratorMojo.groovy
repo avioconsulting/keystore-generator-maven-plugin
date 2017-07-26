@@ -32,6 +32,9 @@ class KeyStoreGeneratorMojo extends AbstractMojo {
         def randomPassword = new BigInteger(130, random).toString(32)
         generateKeystore(destinationKeyStorePath, randomPassword)
         def props = new Properties()
+        if (keystorePasswordPropertiesFilePath.exists()) {
+            props.load(keystorePasswordPropertiesFilePath.newInputStream())
+        }
         props[keystorePasswordPropertyName] = randomPassword
         props.store(keystorePasswordPropertiesFilePath.newOutputStream(), '')
     }
