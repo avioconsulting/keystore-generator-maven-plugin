@@ -13,7 +13,15 @@ class KeyStoreGeneratorMojoTest {
     void setup() {
         tmpDir = new File('tmp')
         if (this.tmpDir.exists()) {
-            assert this.tmpDir.deleteDir()
+            def tries = 0
+            while (!this.tmpDir.deleteDir()) {
+                tries++
+                if (tries > 20) {
+                    throw new Exception('ran out of tries!')
+                }
+                System.gc()
+                Thread.yield()
+            }
         }
         this.tmpDir.mkdirs()
     }
