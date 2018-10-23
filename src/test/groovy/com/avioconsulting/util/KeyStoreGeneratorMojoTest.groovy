@@ -3,6 +3,10 @@ package com.avioconsulting.util
 import org.junit.Before
 import org.junit.Test
 
+import javax.crypto.Cipher
+import javax.crypto.spec.IvParameterSpec
+import javax.crypto.spec.SecretKeySpec
+
 import static org.hamcrest.Matchers.*
 import static org.junit.Assert.assertThat
 
@@ -26,6 +30,23 @@ class KeyStoreGeneratorMojoTest {
         this.tmpDir.mkdirs()
     }
 
+    String decryptPassword(String password,
+                           KeyStoreGeneratorMojo mojo) {
+        def keyBytes = mojo.cryptoKey.bytes
+        // Mule uses the key as the IV
+        def ivspec = new IvParameterSpec(keyBytes)
+        def secretKey = new SecretKeySpec(keyBytes,
+                                          'AES')
+        def cipher = Cipher.getInstance('AES/CBC/PKCS5Padding')
+        cipher.init(Cipher.DECRYPT_MODE,
+                    secretKey,
+                    ivspec)
+        def withoutMuleHeaderFooter = password[2..-2]
+        def byteEncrypted = Base64.getDecoder().decode(withoutMuleHeaderFooter)
+        def decryptedBytes = cipher.doFinal(byteEncrypted)
+        new String(decryptedBytes)
+    }
+
     @Test
     void propertyFileNotThereYet() {
         // arrange
@@ -37,6 +58,7 @@ class KeyStoreGeneratorMojoTest {
                                  'stuff.properties')
         mojo.keystorePasswordPropertiesFilePath = propsPath
         mojo.keystorePasswordPropertyName = 'listener.keystore.password'
+        mojo.cryptoKey = 'ABCDEF1234567890'
 
         // act
         mojo.execute()
@@ -47,7 +69,9 @@ class KeyStoreGeneratorMojoTest {
         props.load(propsPath.newInputStream())
         assertThat props['listener.keystore.password'],
                    is(notNullValue())
-        def password = props['listener.keystore.password']
+        def password = props['listener.keystore.password'] as String
+        password = decryptPassword(password,
+                                   mojo)
         assert keystorePath.exists()
         def text = "keytool -list -keystore ${keystorePath.absolutePath} -storepass ${password}".execute().text
         assertThat text,
@@ -55,6 +79,7 @@ class KeyStoreGeneratorMojoTest {
         assertThat text,
                    is(containsString('Your keystore contains 1 entry'))
     }
+    private static String secretKey = "UrQ9EzuGkXljh151";
 
     @Test
     void forcePassword() {
@@ -67,7 +92,10 @@ class KeyStoreGeneratorMojoTest {
                                  'stuff.properties')
         mojo.keystorePasswordPropertiesFilePath = propsPath
         mojo.keystorePasswordPropertyName = 'listener.keystore.password'
-        def password = mojo.forcedKeyStorePassword = 'forceIt'
+        mojo.forcedKeyStorePassword = 'forceIt'
+        // encrypted version of forceIt
+        def password = '![95jKub4lr1e8vJGqqPX8Ew==]'
+        mojo.cryptoKey = 'ABCDEF1234567890'
 
         // act
         mojo.execute()
@@ -78,6 +106,8 @@ class KeyStoreGeneratorMojoTest {
         props.load(propsPath.newInputStream())
         assertThat props['listener.keystore.password'],
                    is(equalTo(password))
+        password = decryptPassword(password,
+                                   mojo)
         assert keystorePath.exists()
         def text = "keytool -list -keystore ${keystorePath.absolutePath} -storepass ${password}".execute().text
         assertThat text,
@@ -101,6 +131,7 @@ class KeyStoreGeneratorMojoTest {
                                  'stuff.properties')
         mojo.keystorePasswordPropertiesFilePath = propsPath
         mojo.keystorePasswordPropertyName = 'listener.keystore.password'
+        mojo.cryptoKey = 'ABCDEF1234567890'
 
         // act
         mojo.execute()
@@ -111,7 +142,9 @@ class KeyStoreGeneratorMojoTest {
         props.load(propsPath.newInputStream())
         assertThat props['listener.keystore.password'],
                    is(notNullValue())
-        def password = props['listener.keystore.password']
+        def password = props['listener.keystore.password'] as String
+        password = decryptPassword(password,
+                                   mojo)
         assert keystorePath.exists()
         def text = "keytool -list -keystore ${keystorePath.absolutePath} -storepass ${password}".execute().text
         assertThat text,
@@ -131,6 +164,7 @@ class KeyStoreGeneratorMojoTest {
                                  'stuff.properties')
         mojo.keystorePasswordPropertiesFilePath = propsPath
         mojo.keystorePasswordPropertyName = 'listener.keystore.password'
+        mojo.cryptoKey = 'ABCDEF1234567890'
         def existingProps = new Properties()
         existingProps['otherSetting'] = '123'
         existingProps.store(propsPath.newOutputStream(),
@@ -146,7 +180,9 @@ class KeyStoreGeneratorMojoTest {
         props.load(propsPath.newInputStream())
         assertThat props['listener.keystore.password'],
                    is(notNullValue())
-        def password = props['listener.keystore.password']
+        def password = props['listener.keystore.password'] as String
+        password = decryptPassword(password,
+                                   mojo)
         assertThat props['otherSetting'],
                    is(equalTo('123'))
         assert keystorePath.exists()
@@ -170,6 +206,7 @@ class KeyStoreGeneratorMojoTest {
                                  'stuff.properties')
         mojo.keystorePasswordPropertiesFilePath = propsPath
         mojo.keystorePasswordPropertyName = 'listener.keystore.password'
+        mojo.cryptoKey = 'ABCDEF1234567890'
         def existingProps = new Properties()
         existingProps['listener.keystore.password'] = 'foobar'
         existingProps.store(propsPath.newOutputStream(),
@@ -185,7 +222,9 @@ class KeyStoreGeneratorMojoTest {
         props.load(propsPath.newInputStream())
         assertThat props['listener.keystore.password'],
                    is(notNullValue())
-        def password = props['listener.keystore.password']
+        def password = props['listener.keystore.password'] as String
+        password = decryptPassword(password,
+                                   mojo)
         assertThat password,
                    is(not(equalTo('foobar')))
         assert keystorePath.exists()
