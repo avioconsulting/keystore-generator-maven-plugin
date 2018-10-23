@@ -7,12 +7,7 @@ import org.apache.maven.plugin.MojoFailureException
 import org.apache.maven.plugins.annotations.Mojo
 import org.apache.maven.plugins.annotations.Parameter
 import sun.security.tools.keytool.CertAndKeyGen
-import sun.security.x509.CertificateExtensions
-import sun.security.x509.DNSName
-import sun.security.x509.GeneralName
-import sun.security.x509.GeneralNames
-import sun.security.x509.SubjectAlternativeNameExtension
-import sun.security.x509.X500Name
+import sun.security.x509.*
 
 import java.security.KeyStore
 import java.security.SecureRandom
@@ -26,36 +21,49 @@ class KeyStoreGeneratorMojo extends AbstractMojo {
     private File keystorePasswordPropertiesFilePath
     @Parameter(required = true, defaultValue = 'listener.keystore.password')
     private String keystorePasswordPropertyName
+    @Parameter
+    private String forcedKeyStorePassword
 
     @Override
     void execute() throws MojoExecutionException, MojoFailureException {
-        def random = new SecureRandom()
-        def randomPassword = new BigInteger(130, random).toString(32)
+        String usePassword = forcedKeyStorePassword
+        if (!usePassword) {
+            def random = new SecureRandom()
+            usePassword = new BigInteger(130,
+                                            random).toString(32)
+
+        }
         def keystoreParentDir = destinationKeyStorePath.parentFile
         if (!keystoreParentDir.exists()) {
             keystoreParentDir.mkdirs()
         }
-        generateKeystore(destinationKeyStorePath, randomPassword)
+        generateKeystore(destinationKeyStorePath,
+                         usePassword)
         def propsParentDir = keystorePasswordPropertiesFilePath.parentFile
         if (!propsParentDir.exists()) {
             propsParentDir.mkdirs()
         }
         def props = new PropertiesConfiguration(keystorePasswordPropertiesFilePath)
-        props.setProperty(keystorePasswordPropertyName, randomPassword)
+        props.setProperty(keystorePasswordPropertyName,
+                          usePassword)
         props.save(keystorePasswordPropertiesFilePath.newWriter())
     }
 
     private static File join(File parent, String... parts) {
         def separator = System.getProperty 'file.separator'
-        new File(parent, parts.join(separator))
+        new File(parent,
+                 parts.join(separator))
     }
 
     static void generateKeystore(File keystoreFile,
                                  String keystorePassword) {
         def keystore = KeyStore.getInstance('jks')
         def keystorePasswordCharArr = keystorePassword.toCharArray()
-        keystore.load(null, keystorePasswordCharArr)
-        def keyGen = new CertAndKeyGen('RSA', 'SHA1WithRSA', null)
+        keystore.load(null,
+                      keystorePasswordCharArr)
+        def keyGen = new CertAndKeyGen('RSA',
+                                       'SHA1WithRSA',
+                                       null)
         keyGen.generate(1024)
         CertificateExtensions certificateExtensions = getCertExtensions()
         def cert = keyGen.getSelfCertificate(new X500Name('CN=ROOT'),
@@ -69,7 +77,8 @@ class KeyStoreGeneratorMojo extends AbstractMojo {
                              keystorePasswordCharArr,
                              chain)
         def stream = keystoreFile.newOutputStream()
-        keystore.store(stream, keystorePasswordCharArr)
+        keystore.store(stream,
+                       keystorePasswordCharArr)
         stream.close()
     }
 

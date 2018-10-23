@@ -2,7 +2,7 @@ import groovy.xml.XmlUtil
 import org.apache.tools.ant.taskdefs.condition.Os
 
 group 'com.avioconsulting.util'
-version '1.0.0'
+version '1.0.1'
 
 configurations {
     provided
