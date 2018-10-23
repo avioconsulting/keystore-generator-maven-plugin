@@ -21,7 +21,7 @@ class KeyStoreGeneratorMojo extends AbstractMojo {
     private File keystorePasswordPropertiesFilePath
     @Parameter(required = true, defaultValue = 'listener.keystore.password')
     private String keystorePasswordPropertyName
-    @Parameter
+    @Parameter(property = 'keystore.generator.force.password')
     private String forcedKeyStorePassword
 
     @Override
@@ -30,7 +30,7 @@ class KeyStoreGeneratorMojo extends AbstractMojo {
         if (!usePassword) {
             def random = new SecureRandom()
             usePassword = new BigInteger(130,
-                                            random).toString(32)
+                                         random).toString(32)
 
         }
         def keystoreParentDir = destinationKeyStorePath.parentFile
