@@ -59,9 +59,14 @@ clean {
 }
 
 task pluginDescriptor(type: Exec) {
-    def whereCommand = Os.isFamily(Os.FAMILY_WINDOWS) ? 'where mvn.cmd' : 'which mvn'
-    def mvnPath = whereCommand.execute().text.trim()
-    commandLine mvnPath, '-e', '-B', 'org.apache.maven.plugins:maven-plugin-plugin:3.2:descriptor'
+    def isWindows = Os.isFamily(Os.FAMILY_WINDOWS)
+    def isChocolately = isWindows && 'mvn --version'.execute().waitFor() == 0
+    def mvn = isWindows && !isChocolately ? 'mvn.cmd' : 'mvn'
+    if (!isWindows || !isChocolately) {
+        def whereCommand = isWindows ? 'where mvn.cmd' : 'which mvn'
+        mvn = whereCommand.execute().text.trim()
+    }
+    commandLine mvn, '-e', '-B', 'org.apache.maven.plugins:maven-plugin-plugin:3.2:descriptor'
     doFirst {
         def pom = project.file('pom.xml')
         install.repositories.mavenInstaller.pom.writeTo(pom)
