@@ -6,6 +6,29 @@ It does follow steps when executed -
 
 ## Usage
 
+**Step0:** Configure AVIO Github Package Registry
+
+In your POM, add following plugin repository in `pluginRepositories` tag (add if doesn't exist) -
+
+```xml
+    <pluginRepository>
+        <id>github-avio-pkg</id>
+        <name>AVIO Github Package Repository</name>
+        <url>https://maven.pkg.github.com/avioconsulting/public-packages/</url>
+        <layout>default</layout>
+    </pluginRepository>
+```
+
+In your `~/.m2/settings.xml`, add credentials for server id `github-avio-pkg`, like below -
+```xml
+    <server>
+        <id>github</id>
+        <username>YOUR_GIT_USER</username>
+        <password>YOUR_GIT_PERSONAL_TOKEN</password>
+    </server>
+```
+See [working-with-the-apache-maven-registry#authenticating-with-a-personal-access-token](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-apache-maven-registry#authenticating-with-a-personal-access-token) for more details on Github Package Authentication.
+
 **Step1:** To use this plugin, add following entry to maven pom.xml -
 ```xml
 <plugin>
