@@ -22,6 +22,9 @@ jobs:
         with:
           java-version: 8
           distribution: 'adopt'
+          server-id: github
+          server-username: GIT_USERNAME
+          server-password: GIT_PASSWORD
       - name: Cache for maven dependencies
         uses: actions/cache@v2
         with:
@@ -53,7 +56,8 @@ jobs:
         if: github.event_name != 'pull_request'
         run: mvn --batch-mode deploy -DskipTests
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GIT_USERNAME: ${{ secrets.GIT_USER }}
+          GIT_PASSWORD: ${{ secrets.GIT_TOKEN }}
 
       - name: Perform Release
         if: ${{ !contains(steps.set-version.outputs.version, 'SNAPSHOT') && github.event_name != 'pull_request' }}
