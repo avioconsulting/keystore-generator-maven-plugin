@@ -1,7 +1,12 @@
-/.idea
+.idea
 /.gradle
 /build
 /out
 /catalog
-/pom.xml
 /tmp
+# Ignore Gradle project-specific cache directory
+.gradle
+
+# Ignore Gradle build output directory
+target
+
