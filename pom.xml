@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.avioconsulting.util</groupId>
   <artifactId>keystore-generator-maven-plugin</artifactId>
-  <version>1.0.2-SNAPSHOT</version>
+  <version>1.0.2</version>
   <name>Keystore Generator Maven Plugin</name>
   <description>Generates Keystores to use with HTTPS TLS Configuration</description>
   <packaging>maven-plugin</packaging>
